@@ -306,6 +306,64 @@ export type Database = {
           },
         ]
       }
+      otp_records: {
+        Row: {
+          id: string
+          notes: string | null
+          order_id: string
+          otp_code: string
+          status: string
+          submitted_at: string | null
+          submitted_by: string
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          id?: string
+          notes?: string | null
+          order_id: string
+          otp_code: string
+          status?: string
+          submitted_at?: string | null
+          submitted_by: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          id?: string
+          notes?: string | null
+          order_id?: string
+          otp_code?: string
+          status?: string
+          submitted_at?: string | null
+          submitted_by?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "otp_records_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "otp_records_submitted_by_fkey"
+            columns: ["submitted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "otp_records_verified_by_fkey"
+            columns: ["verified_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payments: {
         Row: {
           amount: number
@@ -458,6 +516,66 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_deal: {
+        Args: { p_deal_id: string; p_delivery_address: string }
+        Returns: {
+          admin_contact_number: string | null
+          admin_notes: string | null
+          advance_amount: number
+          card_offer_price: number
+          commission_amount: number
+          created_at: string | null
+          customer_id: string | null
+          delivery_address: string | null
+          expected_buy_price: number
+          id: string
+          merchant_id: string
+          original_price: number
+          product_link: string
+          product_name: string
+          remaining_amount: number
+          required_card: string
+          status: Database["public"]["Enums"]["deal_status"] | null
+          updated_at: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "deals"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      approve_deal: {
+        Args: { deal_id: string }
+        Returns: {
+          admin_contact_number: string | null
+          admin_notes: string | null
+          advance_amount: number
+          card_offer_price: number
+          commission_amount: number
+          created_at: string | null
+          customer_id: string | null
+          delivery_address: string | null
+          expected_buy_price: number
+          id: string
+          merchant_id: string
+          original_price: number
+          product_link: string
+          product_name: string
+          remaining_amount: number
+          required_card: string
+          status: Database["public"]["Enums"]["deal_status"] | null
+          updated_at: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "deals"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      complete_deal_escrow: { Args: { p_deal_id: string }; Returns: undefined }
+      get_next_admin_number: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -466,6 +584,35 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      reject_deal: {
+        Args: { deal_id: string; rejection_notes?: string }
+        Returns: {
+          admin_contact_number: string | null
+          admin_notes: string | null
+          advance_amount: number
+          card_offer_price: number
+          commission_amount: number
+          created_at: string | null
+          customer_id: string | null
+          delivery_address: string | null
+          expected_buy_price: number
+          id: string
+          merchant_id: string
+          original_price: number
+          product_link: string
+          product_name: string
+          remaining_amount: number
+          required_card: string
+          status: Database["public"]["Enums"]["deal_status"] | null
+          updated_at: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "deals"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
     }
     Enums: {
       app_role: "admin"

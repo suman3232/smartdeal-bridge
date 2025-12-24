@@ -8,10 +8,16 @@ export type Profile = {
   email: string;
   phone: string | null;
   preferred_role: 'create_deals' | 'accept_deals' | 'both';
-  is_admin: boolean;
   avatar_url: string | null;
   created_at: string;
   updated_at: string;
+};
+
+export type UserRole = {
+  id: string;
+  user_id: string;
+  role: 'admin';
+  created_at: string;
 };
 
 export type KYC = {

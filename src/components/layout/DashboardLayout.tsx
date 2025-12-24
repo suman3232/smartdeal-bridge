@@ -35,7 +35,7 @@ const adminItems = [
 ];
 
 export function DashboardLayout({ children }: { children: ReactNode }) {
-  const { profile, signOut } = useAuth();
+  const { profile, isAdmin, signOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -82,7 +82,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
         </div>
 
         {/* Admin section */}
-        {profile?.is_admin && (
+        {isAdmin && (
           <div className="mt-6 pt-6 border-t border-border/50 px-3">
             <p className="px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
               Admin

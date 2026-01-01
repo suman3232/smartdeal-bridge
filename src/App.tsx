@@ -7,10 +7,14 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
+import CreateDeal from "./pages/CreateDeal";
+import BrowseDeals from "./pages/BrowseDeals";
+import AdminPanel from "./pages/AdminPanel";
+import Wallet from "./pages/Wallet";
+import Notifications from "./pages/Notifications";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
-
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -23,6 +27,11 @@ const App = () => (
             <Route path="/" element={<Landing />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/create-deal" element={<CreateDeal />} />
+            <Route path="/deals" element={<BrowseDeals />} />
+            <Route path="/admin" element={<AdminPanel />} />
+            <Route path="/wallet" element={<Wallet />} />
+            <Route path="/notifications" element={<Notifications />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

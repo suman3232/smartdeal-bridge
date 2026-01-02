@@ -9,7 +9,9 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import CreateDeal from "./pages/CreateDeal";
 import BrowseDeals from "./pages/BrowseDeals";
+import MyDeals from "./pages/MyDeals";
 import AdminPanel from "./pages/AdminPanel";
+import AdminOtpVerification from "./pages/AdminOtpVerification";
 import Wallet from "./pages/Wallet";
 import Notifications from "./pages/Notifications";
 import NotFound from "./pages/NotFound";
@@ -29,7 +31,9 @@ const App = () => (
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/create-deal" element={<CreateDeal />} />
             <Route path="/deals" element={<BrowseDeals />} />
+            <Route path="/my-deals" element={<MyDeals />} />
             <Route path="/admin" element={<AdminPanel />} />
+            <Route path="/admin/otp" element={<AdminOtpVerification />} />
             <Route path="/wallet" element={<Wallet />} />
             <Route path="/notifications" element={<Notifications />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

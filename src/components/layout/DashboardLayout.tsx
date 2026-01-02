@@ -16,7 +16,9 @@ import {
   X,
   LogOut,
   Zap,
-  ChevronRight
+  ChevronRight,
+  Package,
+  CheckCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -24,6 +26,7 @@ const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
   { icon: ShoppingBag, label: "Browse Deals", href: "/deals" },
   { icon: PlusCircle, label: "Create Deal", href: "/create-deal" },
+  { icon: Package, label: "My Deals", href: "/my-deals" },
   { icon: Wallet, label: "Wallet", href: "/wallet" },
   { icon: Bell, label: "Notifications", href: "/notifications" },
   { icon: FileCheck, label: "KYC", href: "/kyc" },
@@ -32,6 +35,7 @@ const navItems = [
 
 const adminItems = [
   { icon: Shield, label: "Admin Panel", href: "/admin" },
+  { icon: CheckCircle, label: "OTP Verification", href: "/admin/otp" },
 ];
 
 export function DashboardLayout({ children }: { children: ReactNode }) {

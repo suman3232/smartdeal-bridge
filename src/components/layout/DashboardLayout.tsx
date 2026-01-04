@@ -36,6 +36,7 @@ const navItems = [
 const adminItems = [
   { icon: Shield, label: "Admin Panel", href: "/admin" },
   { icon: CheckCircle, label: "OTP Verification", href: "/admin/otp" },
+  { icon: FileCheck, label: "KYC Review", href: "/admin/kyc" },
 ];
 
 export function DashboardLayout({ children }: { children: ReactNode }) {

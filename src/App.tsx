@@ -14,6 +14,7 @@ import AdminPanel from "./pages/AdminPanel";
 import AdminOtpVerification from "./pages/AdminOtpVerification";
 import AdminKYC from "./pages/AdminKYC";
 import KYC from "./pages/KYC";
+import Profile from "./pages/Profile";
 import Wallet from "./pages/Wallet";
 import Notifications from "./pages/Notifications";
 import NotFound from "./pages/NotFound";
@@ -38,6 +39,7 @@ const App = () => (
             <Route path="/admin/otp" element={<AdminOtpVerification />} />
             <Route path="/admin/kyc" element={<AdminKYC />} />
             <Route path="/kyc" element={<KYC />} />
+            <Route path="/profile" element={<Profile />} />
             <Route path="/wallet" element={<Wallet />} />
             <Route path="/notifications" element={<Notifications />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

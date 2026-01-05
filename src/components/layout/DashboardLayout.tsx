@@ -1,6 +1,7 @@
-import { ReactNode, useState } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -28,7 +29,7 @@ const navItems = [
   { icon: PlusCircle, label: "Create Deal", href: "/create-deal" },
   { icon: Package, label: "My Deals", href: "/my-deals" },
   { icon: Wallet, label: "Wallet", href: "/wallet" },
-  { icon: Bell, label: "Notifications", href: "/notifications" },
+  { icon: Bell, label: "Notifications", href: "/notifications", showBadge: true },
   { icon: FileCheck, label: "KYC", href: "/kyc" },
   { icon: User, label: "Profile", href: "/profile" },
 ];
@@ -44,6 +45,44 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (!profile?.id) return;
+
+    // Fetch initial unread count
+    const fetchUnreadCount = async () => {
+      const { count } = await supabase
+        .from("notifications")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", profile.id)
+        .eq("is_read", false);
+      setUnreadCount(count || 0);
+    };
+
+    fetchUnreadCount();
+
+    // Subscribe to realtime changes
+    const channel = supabase
+      .channel("notifications-count")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${profile.id}`,
+        },
+        () => {
+          fetchUnreadCount();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [profile?.id]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -81,7 +120,12 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
             >
               <item.icon className="w-5 h-5" />
               {item.label}
-              {isActive(item.href) && <ChevronRight className="w-4 h-4 ml-auto" />}
+              {item.showBadge && unreadCount > 0 && (
+                <Badge variant="destructive" className="ml-auto h-5 min-w-5 flex items-center justify-center text-xs">
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </Badge>
+              )}
+              {isActive(item.href) && !item.showBadge && <ChevronRight className="w-4 h-4 ml-auto" />}
             </Link>
           ))}
         </div>

@@ -55,6 +55,7 @@ export type Database = {
           id: string
           merchant_id: string
           original_price: number
+          platform_fee: number
           product_link: string
           product_name: string
           remaining_amount: number
@@ -75,6 +76,7 @@ export type Database = {
           id?: string
           merchant_id: string
           original_price: number
+          platform_fee?: number
           product_link: string
           product_name: string
           remaining_amount: number
@@ -95,6 +97,7 @@ export type Database = {
           id?: string
           merchant_id?: string
           original_price?: number
+          platform_fee?: number
           product_link?: string
           product_name?: string
           remaining_amount?: number
@@ -531,6 +534,7 @@ export type Database = {
           id: string
           merchant_id: string
           original_price: number
+          platform_fee: number
           product_link: string
           product_name: string
           remaining_amount: number
@@ -560,6 +564,7 @@ export type Database = {
           id: string
           merchant_id: string
           original_price: number
+          platform_fee: number
           product_link: string
           product_name: string
           remaining_amount: number
@@ -599,6 +604,7 @@ export type Database = {
           id: string
           merchant_id: string
           original_price: number
+          platform_fee: number
           product_link: string
           product_name: string
           remaining_amount: number

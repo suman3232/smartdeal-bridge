@@ -121,27 +121,43 @@ export default function BrowseDeals() {
                   {/* Pricing */}
                   <div className="grid grid-cols-2 gap-3">
                     <div className="p-3 rounded-xl bg-secondary/50">
-                      <p className="text-xs text-muted-foreground">Original</p>
+                      <p className="text-xs text-muted-foreground">Original MRP</p>
                       <p className="font-semibold line-through text-muted-foreground">
                         ₹{deal.original_price.toLocaleString()}
                       </p>
                     </div>
                     <div className="p-3 rounded-xl bg-success/10">
-                      <p className="text-xs text-success">Card Price</p>
+                      <p className="text-xs text-success">Card Offer Price</p>
                       <p className="font-semibold text-success">
                         ₹{deal.card_offer_price.toLocaleString()}
                       </p>
                     </div>
                   </div>
 
-                  {/* Commission */}
+                  {/* Your Earning - Commission */}
                   <div className="p-4 rounded-xl gradient-bg text-primary-foreground">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-xs opacity-80">Your Commission</p>
+                        <p className="text-xs opacity-80">Your Earning (Commission)</p>
                         <p className="text-xl font-bold">₹{deal.commission_amount.toLocaleString()}</p>
                       </div>
                       <IndianRupee className="w-8 h-8 opacity-50" />
+                    </div>
+                  </div>
+
+                  {/* Payment Breakdown */}
+                  <div className="p-3 rounded-xl bg-secondary/30 space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">You pay on site</span>
+                      <span className="font-medium">₹{deal.card_offer_price.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Merchant advance (locked)</span>
+                      <span className="font-medium text-amber-600">₹{deal.advance_amount.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Remaining after delivery</span>
+                      <span className="font-medium">₹{deal.remaining_amount.toLocaleString()}</span>
                     </div>
                   </div>
 

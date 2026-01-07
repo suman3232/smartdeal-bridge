@@ -69,12 +69,34 @@ export function AcceptDealDialog({ deal, open, onOpenChange, onSuccess }: Accept
               <span className="text-sm font-medium">{deal.required_card}</span>
             </div>
             <div className="flex justify-between">
+              <span className="text-sm text-muted-foreground">Original MRP</span>
+              <span className="text-sm font-medium line-through text-muted-foreground">₹{deal.original_price.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between">
               <span className="text-sm text-muted-foreground">Card Offer Price</span>
               <span className="text-sm font-medium">₹{deal.card_offer_price.toLocaleString()}</span>
             </div>
-            <div className="flex justify-between pt-2 border-t">
-              <span className="text-sm font-semibold">Your Commission</span>
-              <span className="text-sm font-bold text-success">₹{deal.commission_amount.toLocaleString()}</span>
+            <div className="flex justify-between">
+              <span className="text-sm text-muted-foreground">Total Savings</span>
+              <span className="text-sm font-medium text-green-600">₹{(deal.original_price - deal.card_offer_price).toLocaleString()}</span>
+            </div>
+          </div>
+
+          {/* Payment Breakdown */}
+          <div className="p-4 rounded-xl border border-primary/20 bg-primary/5 space-y-2">
+            <h4 className="text-sm font-semibold text-primary mb-2">💰 How You'll Be Paid</h4>
+            <div className="flex justify-between">
+              <span className="text-sm text-muted-foreground">Your Commission</span>
+              <span className="text-sm font-bold text-green-600">₹{deal.commission_amount.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-muted-foreground">You pay on e-commerce site</span>
+              <span className="text-sm font-medium">₹{deal.card_offer_price.toLocaleString()}</span>
+            </div>
+            <div className="pt-2 border-t text-xs text-muted-foreground">
+              <p>• Merchant has locked ₹{deal.advance_amount.toLocaleString()} as advance</p>
+              <p>• Remaining ₹{deal.remaining_amount.toLocaleString()} paid after delivery</p>
+              <p>• Commission released after OTP verification</p>
             </div>
           </div>
 

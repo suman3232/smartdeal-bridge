@@ -246,7 +246,7 @@ export function OrderManagementDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Package className="h-5 w-5" />
@@ -255,6 +255,28 @@ export function OrderManagementDialog({
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* Deal Summary */}
+          <div className="p-3 rounded-lg bg-secondary/50 text-sm space-y-1">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Card Offer Price:</span>
+              <span className="font-medium">₹{deal.card_offer_price.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Customer Commission:</span>
+              <span className="font-medium text-green-600">₹{deal.commission_amount.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Advance (Locked):</span>
+              <span className="font-medium text-amber-600">₹{deal.advance_amount.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Remaining After Delivery:</span>
+              <span className="font-medium">₹{deal.remaining_amount.toLocaleString()}</span>
+            </div>
+          </div>
+
+          <Separator />
+
           {/* Order Status */}
           {order ? (
             <div className="flex items-center gap-2">

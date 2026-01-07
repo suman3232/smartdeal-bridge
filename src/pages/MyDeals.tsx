@@ -96,24 +96,47 @@ export default function MyDeals() {
       <CardContent className="space-y-3">
         <div className="grid grid-cols-2 gap-2 text-sm">
           <div>
-            <span className="text-muted-foreground">Card Offer:</span>
-            <span className="ml-1 font-medium">₹{deal.card_offer_price}</span>
+            <span className="text-muted-foreground">Original MRP:</span>
+            <span className="ml-1 font-medium line-through">₹{deal.original_price.toLocaleString()}</span>
           </div>
           <div>
-            <span className="text-muted-foreground">Commission:</span>
-            <span className="ml-1 font-medium text-green-600">₹{deal.commission_amount}</span>
+            <span className="text-muted-foreground">Card Offer:</span>
+            <span className="ml-1 font-medium">₹{deal.card_offer_price.toLocaleString()}</span>
           </div>
           <div>
             <span className="text-muted-foreground">Card Required:</span>
             <span className="ml-1">{deal.required_card}</span>
           </div>
-          {deal.admin_contact_number && (
-            <div className="flex items-center gap-1">
-              <Phone className="h-3 w-3" />
-              <span>{deal.admin_contact_number}</span>
-            </div>
-          )}
+          <div>
+            <span className="text-muted-foreground">Commission:</span>
+            <span className="ml-1 font-medium text-green-600">₹{deal.commission_amount.toLocaleString()}</span>
+          </div>
         </div>
+
+        {/* Payment Details for Merchant */}
+        {role === "merchant" && (
+          <div className="p-2 rounded-lg bg-secondary/50 text-xs space-y-1">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Advance (Locked):</span>
+              <span className="font-medium text-amber-600">₹{deal.advance_amount.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Remaining:</span>
+              <span className="font-medium">₹{deal.remaining_amount.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Platform Fee:</span>
+              <span className="font-medium">₹{deal.platform_fee.toLocaleString()}</span>
+            </div>
+          </div>
+        )}
+
+        {deal.admin_contact_number && (
+          <div className="flex items-center gap-1 text-sm">
+            <Phone className="h-3 w-3" />
+            <span>{deal.admin_contact_number}</span>
+          </div>
+        )}
 
         <div className="flex gap-2 pt-2">
           <Button variant="outline" size="sm" asChild>

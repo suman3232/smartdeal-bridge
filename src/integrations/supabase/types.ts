@@ -166,40 +166,52 @@ export type Database = {
       }
       kycs: {
         Row: {
+          account_holder_name: string | null
           account_number: string
           admin_notes: string | null
           bank_name: string
           created_at: string | null
+          date_of_birth: string | null
           document_url: string
+          full_name: string | null
           id: string
           ifsc_code: string
           pan_number: string
+          selfie_url: string | null
           status: Database["public"]["Enums"]["kyc_status"] | null
           updated_at: string | null
           user_id: string
         }
         Insert: {
+          account_holder_name?: string | null
           account_number: string
           admin_notes?: string | null
           bank_name: string
           created_at?: string | null
+          date_of_birth?: string | null
           document_url: string
+          full_name?: string | null
           id?: string
           ifsc_code: string
           pan_number: string
+          selfie_url?: string | null
           status?: Database["public"]["Enums"]["kyc_status"] | null
           updated_at?: string | null
           user_id: string
         }
         Update: {
+          account_holder_name?: string | null
           account_number?: string
           admin_notes?: string | null
           bank_name?: string
           created_at?: string | null
+          date_of_birth?: string | null
           document_url?: string
+          full_name?: string | null
           id?: string
           ifsc_code?: string
           pan_number?: string
+          selfie_url?: string | null
           status?: Database["public"]["Enums"]["kyc_status"] | null
           updated_at?: string | null
           user_id?: string

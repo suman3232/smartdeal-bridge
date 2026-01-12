@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase, Deal } from "@/lib/supabase";
+import { useKycStatus } from "@/hooks/useKycStatus";
+import { KycBlocker } from "@/components/kyc/KycBlocker";
 import { Loader2, MapPin } from "lucide-react";
 
 interface AcceptDealDialogProps {
@@ -17,12 +18,18 @@ interface AcceptDealDialogProps {
 
 export function AcceptDealDialog({ deal, open, onOpenChange, onSuccess }: AcceptDealDialogProps) {
   const { toast } = useToast();
+  const { status: kycStatus, loading: kycLoading, canAcceptDeal } = useKycStatus();
   const [loading, setLoading] = useState(false);
   const [deliveryAddress, setDeliveryAddress] = useState("");
 
   const handleAccept = async () => {
     if (!deal || !deliveryAddress.trim()) {
       toast({ title: "Error", description: "Please enter a delivery address", variant: "destructive" });
+      return;
+    }
+
+    if (!canAcceptDeal) {
+      toast({ title: "KYC Required", description: "Please complete KYC verification first", variant: "destructive" });
       return;
     }
 
@@ -49,7 +56,7 @@ export function AcceptDealDialog({ deal, open, onOpenChange, onSuccess }: Accept
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Accept Deal</DialogTitle>
           <DialogDescription>
@@ -57,84 +64,96 @@ export function AcceptDealDialog({ deal, open, onOpenChange, onSuccess }: Accept
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
-          {/* Deal Summary */}
-          <div className="p-4 rounded-xl bg-secondary/50 space-y-2">
-            <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Product</span>
-              <span className="text-sm font-medium">{deal.product_name}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Required Card</span>
-              <span className="text-sm font-medium">{deal.required_card}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Original MRP</span>
-              <span className="text-sm font-medium line-through text-muted-foreground">₹{deal.original_price.toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Card Offer Price</span>
-              <span className="text-sm font-medium">₹{deal.card_offer_price.toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Total Savings</span>
-              <span className="text-sm font-medium text-green-600">₹{(deal.original_price - deal.card_offer_price).toLocaleString()}</span>
-            </div>
+        {kycLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
-
-          {/* Payment Breakdown */}
-          <div className="p-4 rounded-xl border border-primary/20 bg-primary/5 space-y-2">
-            <h4 className="text-sm font-semibold text-primary mb-2">💰 How You'll Be Paid</h4>
-            <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Your Commission</span>
-              <span className="text-sm font-bold text-green-600">₹{deal.commission_amount.toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">You pay on e-commerce site</span>
-              <span className="text-sm font-medium">₹{deal.card_offer_price.toLocaleString()}</span>
-            </div>
-            <div className="pt-2 border-t text-xs text-muted-foreground">
-              <p>• Merchant has locked ₹{deal.advance_amount.toLocaleString()} as advance</p>
-              <p>• Remaining ₹{deal.remaining_amount.toLocaleString()} paid after delivery</p>
-              <p>• Commission released after OTP verification</p>
-            </div>
+        ) : !canAcceptDeal ? (
+          <div className="py-4">
+            <KycBlocker status={kycStatus} actionType="accept" />
           </div>
+        ) : (
+          <>
+            <div className="space-y-4 py-4">
+              {/* Deal Summary */}
+              <div className="p-4 rounded-xl bg-secondary/50 space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Product</span>
+                  <span className="text-sm font-medium">{deal.product_name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Required Card</span>
+                  <span className="text-sm font-medium">{deal.required_card}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Original MRP</span>
+                  <span className="text-sm font-medium line-through text-muted-foreground">₹{deal.original_price.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Card Offer Price</span>
+                  <span className="text-sm font-medium">₹{deal.card_offer_price.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Total Savings</span>
+                  <span className="text-sm font-medium text-green-600">₹{(deal.original_price - deal.card_offer_price).toLocaleString()}</span>
+                </div>
+              </div>
 
-          {/* Delivery Address */}
-          <div>
-            <Label htmlFor="delivery_address">Delivery Address</Label>
-            <div className="relative mt-1">
-              <MapPin className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-              <Textarea
-                id="delivery_address"
-                placeholder="Enter your full delivery address..."
-                value={deliveryAddress}
-                onChange={(e) => setDeliveryAddress(e.target.value)}
-                className="pl-10 min-h-[100px]"
-                required
-              />
+              {/* Payment Breakdown */}
+              <div className="p-4 rounded-xl border border-primary/20 bg-primary/5 space-y-2">
+                <h4 className="text-sm font-semibold text-primary mb-2">💰 How You'll Be Paid</h4>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Your Commission</span>
+                  <span className="text-sm font-bold text-green-600">₹{deal.commission_amount.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">You pay on e-commerce site</span>
+                  <span className="text-sm font-medium">₹{deal.card_offer_price.toLocaleString()}</span>
+                </div>
+                <div className="pt-2 border-t text-xs text-muted-foreground">
+                  <p>• Merchant has locked ₹{deal.advance_amount.toLocaleString()} as advance</p>
+                  <p>• Remaining ₹{deal.remaining_amount.toLocaleString()} paid after delivery</p>
+                  <p>• Commission released after OTP verification</p>
+                </div>
+              </div>
+
+              {/* Delivery Address */}
+              <div>
+                <Label htmlFor="delivery_address">Delivery Address</Label>
+                <div className="relative mt-1">
+                  <MapPin className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+                  <Textarea
+                    id="delivery_address"
+                    placeholder="Enter your full delivery address..."
+                    value={deliveryAddress}
+                    onChange={(e) => setDeliveryAddress(e.target.value)}
+                    className="pl-10 min-h-[100px]"
+                    required
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  The product will be delivered to this address
+                </p>
+              </div>
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              The product will be delivered to this address
-            </p>
-          </div>
-        </div>
 
-        <div className="flex gap-3">
-          <Button variant="outline" onClick={() => onOpenChange(false)} className="flex-1">
-            Cancel
-          </Button>
-          <Button onClick={handleAccept} disabled={loading} className="flex-1">
-            {loading ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Accepting...
-              </>
-            ) : (
-              "Accept Deal"
-            )}
-          </Button>
-        </div>
+            <div className="flex gap-3">
+              <Button variant="outline" onClick={() => onOpenChange(false)} className="flex-1">
+                Cancel
+              </Button>
+              <Button onClick={handleAccept} disabled={loading} className="flex-1">
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Accepting...
+                  </>
+                ) : (
+                  "Accept Deal"
+                )}
+              </Button>
+            </div>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );

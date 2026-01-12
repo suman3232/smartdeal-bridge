@@ -9,7 +9,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { 
-  Shield, 
   Clock, 
   CheckCircle, 
   XCircle,
@@ -18,7 +17,9 @@ import {
   FileCheck,
   User,
   CreditCard,
-  Building
+  Building,
+  Camera,
+  Calendar
 } from "lucide-react";
 import { 
   AlertDialog,
@@ -42,10 +43,14 @@ type KYCWithProfile = {
   id: string;
   user_id: string;
   pan_number: string;
+  full_name: string | null;
+  date_of_birth: string | null;
   bank_name: string;
   account_number: string;
+  account_holder_name: string | null;
   ifsc_code: string;
   document_url: string;
+  selfie_url: string | null;
   status: "pending" | "approved" | "rejected";
   admin_notes: string | null;
   created_at: string;
@@ -113,7 +118,7 @@ export default function AdminKYC() {
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "KYC Approved", description: "User has been verified" });
+      toast({ title: "KYC Approved", description: "User has been verified and can now create/accept deals" });
       fetchKYCs();
       setSelectedKyc(null);
     }
@@ -128,7 +133,7 @@ export default function AdminKYC() {
       .from("kycs")
       .update({ 
         status: "rejected", 
-        admin_notes: rejectDialog.notes || "Your submission did not meet our requirements" 
+        admin_notes: rejectDialog.notes || "Your submission did not meet our requirements. Please resubmit with correct details." 
       })
       .eq("id", rejectDialog.kycId);
     
@@ -138,7 +143,7 @@ export default function AdminKYC() {
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "KYC Rejected", description: "User has been notified" });
+      toast({ title: "KYC Rejected", description: "User has been notified with rejection reason" });
       fetchKYCs();
       setSelectedKyc(null);
     }
@@ -154,6 +159,15 @@ export default function AdminKYC() {
       case "rejected": return "rejected" as const;
       default: return "pending" as const;
     }
+  };
+
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return "Not provided";
+    return new Date(dateString).toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "short",
+      year: "numeric"
+    });
   };
 
   if (authLoading) {
@@ -177,7 +191,7 @@ export default function AdminKYC() {
               <User className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-semibold">{kyc.profiles?.full_name || "Unknown"}</h3>
+              <h3 className="font-semibold">{kyc.full_name || kyc.profiles?.full_name || "Unknown"}</h3>
               <p className="text-sm text-muted-foreground">{kyc.profiles?.email}</p>
             </div>
           </div>
@@ -351,9 +365,16 @@ export default function AdminKYC() {
 
       {/* Details Dialog */}
       <Dialog open={!!selectedKyc} onOpenChange={() => setSelectedKyc(null)}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>KYC Details</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              KYC Details
+              {selectedKyc && (
+                <Badge variant={getStatusVariant(selectedKyc.status)} className="capitalize ml-2">
+                  {selectedKyc.status}
+                </Badge>
+              )}
+            </DialogTitle>
           </DialogHeader>
           {selectedKyc && (
             <div className="space-y-4">
@@ -372,44 +393,109 @@ export default function AdminKYC() {
               </div>
 
               {/* PAN Details */}
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <div className="flex items-center gap-2 text-sm font-medium">
-                  <CreditCard className="w-4 h-4" />
-                  PAN Details
+                  <CreditCard className="w-4 h-4 text-primary" />
+                  PAN Card Details
                 </div>
-                <div className="p-3 rounded-lg bg-secondary/30">
-                  <p className="text-lg font-mono">{selectedKyc.pan_number}</p>
+                <div className="p-3 rounded-lg bg-secondary/30 grid grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-xs text-muted-foreground">PAN Number</p>
+                    <p className="font-mono font-semibold">{selectedKyc.pan_number}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Full Name (as per PAN)</p>
+                    <p className="font-medium">{selectedKyc.full_name || "Not provided"}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-muted-foreground" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Date of Birth</p>
+                      <p className="font-medium">{formatDate(selectedKyc.date_of_birth)}</p>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* PAN Image */}
+                <div>
+                  <p className="text-sm font-medium mb-2">PAN Card Image</p>
+                  <a href={selectedKyc.document_url} target="_blank" rel="noopener noreferrer">
+                    <img 
+                      src={selectedKyc.document_url} 
+                      alt="PAN Card" 
+                      className="w-full h-48 object-cover rounded-lg border hover:opacity-90 transition-opacity"
+                    />
+                  </a>
                 </div>
               </div>
 
               {/* Bank Details */}
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <div className="flex items-center gap-2 text-sm font-medium">
-                  <Building className="w-4 h-4" />
-                  Bank Details
+                  <Building className="w-4 h-4 text-primary" />
+                  Bank Account Details
                 </div>
-                <div className="p-3 rounded-lg bg-secondary/30 space-y-1">
-                  <p><span className="text-muted-foreground">Bank:</span> {selectedKyc.bank_name}</p>
-                  <p><span className="text-muted-foreground">Account:</span> {selectedKyc.account_number}</p>
-                  <p><span className="text-muted-foreground">IFSC:</span> {selectedKyc.ifsc_code}</p>
+                <div className="p-3 rounded-lg bg-secondary/30 space-y-2">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Account Holder</p>
+                      <p className="font-medium">{selectedKyc.account_holder_name || "Not provided"}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Bank Name</p>
+                      <p className="font-medium">{selectedKyc.bank_name}</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Account Number</p>
+                      <p className="font-mono">{selectedKyc.account_number}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">IFSC Code</p>
+                      <p className="font-mono">{selectedKyc.ifsc_code}</p>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* Document */}
-              <div className="space-y-2">
-                <p className="text-sm font-medium">Document</p>
-                <a href={selectedKyc.document_url} target="_blank" rel="noopener noreferrer">
-                  <img 
-                    src={selectedKyc.document_url} 
-                    alt="KYC Document" 
-                    className="w-full h-48 object-cover rounded-lg border hover:opacity-90 transition-opacity"
-                  />
-                </a>
-              </div>
+              {/* Selfie */}
+              {selectedKyc.selfie_url && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <Camera className="w-4 h-4 text-primary" />
+                    Selfie Photo
+                  </div>
+                  <a href={selectedKyc.selfie_url} target="_blank" rel="noopener noreferrer">
+                    <img 
+                      src={selectedKyc.selfie_url} 
+                      alt="Selfie" 
+                      className="w-full h-48 object-cover rounded-lg border hover:opacity-90 transition-opacity"
+                    />
+                  </a>
+                </div>
+              )}
+
+              {!selectedKyc.selfie_url && (
+                <div className="p-3 rounded-lg bg-warning/10 border border-warning/20 text-sm">
+                  <div className="flex items-center gap-2">
+                    <Camera className="w-4 h-4 text-warning" />
+                    <span className="text-muted-foreground">No selfie provided by user</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Rejection Notes (if rejected) */}
+              {selectedKyc.status === "rejected" && selectedKyc.admin_notes && (
+                <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20">
+                  <p className="text-sm font-medium text-destructive mb-1">Rejection Reason</p>
+                  <p className="text-sm text-muted-foreground">{selectedKyc.admin_notes}</p>
+                </div>
+              )}
 
               {/* Actions */}
               {selectedKyc.status === "pending" && (
-                <div className="flex gap-2 pt-2">
+                <div className="flex gap-2 pt-2 border-t">
                   <Button 
                     className="flex-1"
                     onClick={() => handleApprove(selectedKyc.id)}
@@ -420,7 +506,7 @@ export default function AdminKYC() {
                     ) : (
                       <CheckCircle className="w-4 h-4 mr-2" />
                     )}
-                    Approve
+                    Approve KYC
                   </Button>
                   <Button 
                     variant="destructive"
@@ -429,7 +515,7 @@ export default function AdminKYC() {
                     disabled={actionLoading === selectedKyc.id}
                   >
                     <XCircle className="w-4 h-4 mr-2" />
-                    Reject
+                    Reject KYC
                   </Button>
                 </div>
               )}
@@ -444,14 +530,15 @@ export default function AdminKYC() {
           <AlertDialogHeader>
             <AlertDialogTitle>Reject KYC</AlertDialogTitle>
             <AlertDialogDescription>
-              Please provide a reason for rejection. This will be shown to the user.
+              Please provide a clear reason for rejection. This will be shown to the user so they can correct and resubmit.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="py-4">
             <Textarea
-              placeholder="Reason for rejection..."
+              placeholder="Reason for rejection (e.g., PAN image is blurry, details don't match, etc.)..."
               value={rejectDialog.notes}
               onChange={(e) => setRejectDialog({ ...rejectDialog, notes: e.target.value })}
+              rows={4}
             />
           </div>
           <AlertDialogFooter>

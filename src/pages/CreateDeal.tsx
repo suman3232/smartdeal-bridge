@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { useKycStatus } from "@/hooks/useKycStatus";
+import { KycBlocker } from "@/components/kyc/KycBlocker";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Link as LinkIcon, CreditCard, IndianRupee, Loader2, Info, Users, Building2, Wallet, TrendingUp, ShieldCheck, AlertCircle } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -18,6 +20,7 @@ const ADVANCE_PERCENTAGE = 25; // Merchant pays 25% of final price as advance
 
 export default function CreateDeal() {
   const { profile } = useAuth();
+  const { status: kycStatus, loading: kycLoading, canCreateDeal } = useKycStatus();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -71,6 +74,11 @@ export default function CreateDeal() {
       return;
     }
 
+    if (!canCreateDeal) {
+      toast({ title: "KYC Required", description: "Please complete KYC verification first", variant: "destructive" });
+      return;
+    }
+
     if (!isValidDeal) {
       toast({ 
         title: "Invalid Pricing", 
@@ -107,6 +115,17 @@ export default function CreateDeal() {
     }
   };
 
+  // Show loading state while checking KYC
+  if (kycLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
       <div className="max-w-3xl mx-auto space-y-6">
@@ -123,276 +142,286 @@ export default function CreateDeal() {
           </div>
         </div>
 
-        {/* How it works */}
-        <Card className="border-primary/20 bg-primary/5">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Info className="w-4 h-4" />
-              How OfferBridge Works
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm text-muted-foreground space-y-2">
-            <p>1. You create a deal with the product you want and the card discount you need.</p>
-            <p>2. A customer with the required card accepts your deal and places the order.</p>
-            <p>3. You pay the merchant final price (advance now + remaining after delivery).</p>
-            <p>4. The customer earns commission, platform takes a small fee.</p>
-          </CardContent>
-        </Card>
+        {/* KYC Blocker */}
+        {!canCreateDeal && (
+          <KycBlocker status={kycStatus} actionType="create" />
+        )}
 
-        <div className="grid lg:grid-cols-5 gap-6">
-          {/* Form */}
-          <Card className="lg:col-span-3">
-            <CardHeader>
-              <CardTitle>Deal Details</CardTitle>
-              <CardDescription>
-                Enter product information and pricing
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Product Info */}
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="product_name">Product Name</Label>
-                    <Input
-                      id="product_name"
-                      name="product_name"
-                      placeholder="e.g., iPhone 15 Pro Max"
-                      value={formData.product_name}
-                      onChange={handleChange}
-                      required
-                      className="mt-1"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="product_link">Product Link</Label>
-                    <div className="relative mt-1">
-                      <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="product_link"
-                        name="product_link"
-                        type="url"
-                        placeholder="https://amazon.in/..."
-                        value={formData.product_link}
-                        onChange={handleChange}
-                        required
-                        className="pl-10"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="required_card">Required Credit Card</Label>
-                    <div className="relative mt-1">
-                      <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="required_card"
-                        name="required_card"
-                        placeholder="e.g., HDFC Infinia, SBI Elite, ICICI Amazon Pay"
-                        value={formData.required_card}
-                        onChange={handleChange}
-                        required
-                        className="pl-10"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <Separator />
-
-                {/* Pricing */}
-                <div className="space-y-4">
-                  <h3 className="font-semibold">Pricing Details</h3>
-                  
-                  <div>
-                    <Label htmlFor="original_price">Original Price / MRP (₹)</Label>
-                    <div className="relative mt-1">
-                      <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="original_price"
-                        name="original_price"
-                        type="number"
-                        min="0"
-                        step="1"
-                        placeholder="0"
-                        value={formData.original_price}
-                        onChange={handleChange}
-                        required
-                        className="pl-10"
-                      />
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">Product price without any discounts</p>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="card_offer_price">Card Offer Price (₹)</Label>
-                    <div className="relative mt-1">
-                      <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="card_offer_price"
-                        name="card_offer_price"
-                        type="number"
-                        min="0"
-                        step="1"
-                        placeholder="0"
-                        value={formData.card_offer_price}
-                        onChange={handleChange}
-                        required
-                        className="pl-10"
-                      />
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">Price after credit card discount (what customer pays on site)</p>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="merchant_final_price">Merchant Final Price (₹)</Label>
-                    <div className="relative mt-1">
-                      <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="merchant_final_price"
-                        name="merchant_final_price"
-                        type="number"
-                        min="0"
-                        step="1"
-                        placeholder="0"
-                        value={formData.merchant_final_price}
-                        onChange={handleChange}
-                        required
-                        className="pl-10"
-                      />
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">Total amount you're willing to pay (must be ≥ card offer price)</p>
-                  </div>
-
-                  {merchantFinalPrice > 0 && merchantFinalPrice < cardOfferPrice && (
-                    <div className="flex items-center gap-2 text-destructive text-sm">
-                      <AlertCircle className="w-4 h-4" />
-                      <span>Merchant final price must be at least the card offer price</span>
-                    </div>
-                  )}
-                </div>
-
-                <Button type="submit" className="w-full" disabled={loading || !isValidDeal}>
-                  {loading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Creating Deal...
-                    </>
-                  ) : (
-                    "Create Deal"
-                  )}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-
-          {/* Live Calculations Sidebar */}
-          <div className="lg:col-span-2 space-y-4">
-            {/* Savings Overview */}
-            <Card>
+        {/* Show form only if KYC is approved */}
+        {canCreateDeal && (
+          <>
+            {/* How it works */}
+            <Card className="border-primary/20 bg-primary/5">
               <CardHeader className="pb-3">
                 <CardTitle className="text-base flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-green-500" />
-                  Savings Overview
+                  <Info className="w-4 h-4" />
+                  How OfferBridge Works
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Card Discount</span>
-                  <span className="font-medium text-green-600">₹{totalSavings.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Extra Amount Pool</span>
-                  <span className="font-medium">₹{extraAmount.toLocaleString()}</span>
-                </div>
+              <CardContent className="text-sm text-muted-foreground space-y-2">
+                <p>1. You create a deal with the product you want and the card discount you need.</p>
+                <p>2. A customer with the required card accepts your deal and places the order.</p>
+                <p>3. You pay the merchant final price (advance now + remaining after delivery).</p>
+                <p>4. The customer earns commission, platform takes a small fee.</p>
               </CardContent>
             </Card>
 
-            {/* Money Split */}
-            <Card className="border-primary/30">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">How Money is Split</CardTitle>
-                <CardDescription className="text-xs">
-                  Auto-calculated ({COMMISSION_PERCENTAGE}% to customer)
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-2">
-                    <Users className="w-4 h-4 text-blue-500" />
-                    <span>Customer Commission</span>
-                  </div>
-                  <span className="font-bold text-blue-600">₹{customerCommission.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-2">
-                    <Building2 className="w-4 h-4 text-orange-500" />
-                    <span>Platform Fee</span>
-                  </div>
-                  <span className="font-medium text-orange-600">₹{platformFee.toLocaleString()}</span>
-                </div>
-                <Separator />
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-2">
-                    <CreditCard className="w-4 h-4 text-muted-foreground" />
-                    <span>Customer Pays Online</span>
-                  </div>
-                  <span className="font-medium">₹{customerPayment.toLocaleString()}</span>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="grid lg:grid-cols-5 gap-6">
+              {/* Form */}
+              <Card className="lg:col-span-3">
+                <CardHeader>
+                  <CardTitle>Deal Details</CardTitle>
+                  <CardDescription>
+                    Enter product information and pricing
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleSubmit} className="space-y-6">
+                    {/* Product Info */}
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="product_name">Product Name</Label>
+                        <Input
+                          id="product_name"
+                          name="product_name"
+                          placeholder="e.g., iPhone 15 Pro Max"
+                          value={formData.product_name}
+                          onChange={handleChange}
+                          required
+                          className="mt-1"
+                        />
+                      </div>
 
-            {/* Payment Schedule */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Wallet className="w-4 h-4" />
-                  Your Payment Schedule
-                </CardTitle>
-                <CardDescription className="text-xs">
-                  {ADVANCE_PERCENTAGE}% advance, rest after delivery
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <div className="font-medium">Advance (Locked)</div>
-                    <div className="text-xs text-muted-foreground">Paid when deal is accepted</div>
-                  </div>
-                  <span className="font-bold">₹{advanceAmount.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <div>
-                    <div className="font-medium">Remaining</div>
-                    <div className="text-xs text-muted-foreground">After delivery confirmation</div>
-                  </div>
-                  <span className="font-medium">₹{remainingAmount.toLocaleString()}</span>
-                </div>
-                <Separator />
-                <div className="flex justify-between items-center text-base">
-                  <span className="font-semibold">Total You Pay</span>
-                  <span className="font-bold text-primary">₹{merchantFinalPrice.toLocaleString()}</span>
-                </div>
-              </CardContent>
-            </Card>
+                      <div>
+                        <Label htmlFor="product_link">Product Link</Label>
+                        <div className="relative mt-1">
+                          <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <Input
+                            id="product_link"
+                            name="product_link"
+                            type="url"
+                            placeholder="https://amazon.in/..."
+                            value={formData.product_link}
+                            onChange={handleChange}
+                            required
+                            className="pl-10"
+                          />
+                        </div>
+                      </div>
 
-            {/* Escrow Info */}
-            <Card className="bg-secondary/30">
-              <CardContent className="pt-4">
-                <div className="flex items-start gap-3">
-                  <ShieldCheck className="w-5 h-5 text-green-500 mt-0.5" />
-                  <div className="text-sm">
-                    <div className="font-medium">Escrow Protected</div>
-                    <div className="text-muted-foreground text-xs mt-1">
-                      Your advance is held securely and only released after delivery is confirmed with OTP verification.
+                      <div>
+                        <Label htmlFor="required_card">Required Credit Card</Label>
+                        <div className="relative mt-1">
+                          <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <Input
+                            id="required_card"
+                            name="required_card"
+                            placeholder="e.g., HDFC Infinia, SBI Elite, ICICI Amazon Pay"
+                            value={formData.required_card}
+                            onChange={handleChange}
+                            required
+                            className="pl-10"
+                          />
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+
+                    <Separator />
+
+                    {/* Pricing */}
+                    <div className="space-y-4">
+                      <h3 className="font-semibold">Pricing Details</h3>
+                      
+                      <div>
+                        <Label htmlFor="original_price">Original Price / MRP (₹)</Label>
+                        <div className="relative mt-1">
+                          <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <Input
+                            id="original_price"
+                            name="original_price"
+                            type="number"
+                            min="0"
+                            step="1"
+                            placeholder="0"
+                            value={formData.original_price}
+                            onChange={handleChange}
+                            required
+                            className="pl-10"
+                          />
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">Product price without any discounts</p>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="card_offer_price">Card Offer Price (₹)</Label>
+                        <div className="relative mt-1">
+                          <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <Input
+                            id="card_offer_price"
+                            name="card_offer_price"
+                            type="number"
+                            min="0"
+                            step="1"
+                            placeholder="0"
+                            value={formData.card_offer_price}
+                            onChange={handleChange}
+                            required
+                            className="pl-10"
+                          />
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">Price after credit card discount (what customer pays on site)</p>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="merchant_final_price">Merchant Final Price (₹)</Label>
+                        <div className="relative mt-1">
+                          <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <Input
+                            id="merchant_final_price"
+                            name="merchant_final_price"
+                            type="number"
+                            min="0"
+                            step="1"
+                            placeholder="0"
+                            value={formData.merchant_final_price}
+                            onChange={handleChange}
+                            required
+                            className="pl-10"
+                          />
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">Total amount you're willing to pay (must be ≥ card offer price)</p>
+                      </div>
+
+                      {merchantFinalPrice > 0 && merchantFinalPrice < cardOfferPrice && (
+                        <div className="flex items-center gap-2 text-destructive text-sm">
+                          <AlertCircle className="w-4 h-4" />
+                          <span>Merchant final price must be at least the card offer price</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <Button type="submit" className="w-full" disabled={loading || !isValidDeal}>
+                      {loading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Creating Deal...
+                        </>
+                      ) : (
+                        "Create Deal"
+                      )}
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+
+              {/* Live Calculations Sidebar */}
+              <div className="lg:col-span-2 space-y-4">
+                {/* Savings Overview */}
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4 text-green-500" />
+                      Savings Overview
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Card Discount</span>
+                      <span className="font-medium text-green-600">₹{totalSavings.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Extra Amount Pool</span>
+                      <span className="font-medium">₹{extraAmount.toLocaleString()}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Money Split */}
+                <Card className="border-primary/30">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base">How Money is Split</CardTitle>
+                    <CardDescription className="text-xs">
+                      Auto-calculated ({COMMISSION_PERCENTAGE}% to customer)
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3 text-sm">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-2">
+                        <Users className="w-4 h-4 text-blue-500" />
+                        <span>Customer Commission</span>
+                      </div>
+                      <span className="font-bold text-blue-600">₹{customerCommission.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-2">
+                        <Building2 className="w-4 h-4 text-orange-500" />
+                        <span>Platform Fee</span>
+                      </div>
+                      <span className="font-medium text-orange-600">₹{platformFee.toLocaleString()}</span>
+                    </div>
+                    <Separator />
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-2">
+                        <CreditCard className="w-4 h-4 text-muted-foreground" />
+                        <span>Customer Pays Online</span>
+                      </div>
+                      <span className="font-medium">₹{customerPayment.toLocaleString()}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Payment Schedule */}
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Wallet className="w-4 h-4" />
+                      Your Payment Schedule
+                    </CardTitle>
+                    <CardDescription className="text-xs">
+                      {ADVANCE_PERCENTAGE}% advance, rest after delivery
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3 text-sm">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <div className="font-medium">Advance (Locked)</div>
+                        <div className="text-xs text-muted-foreground">Paid when deal is accepted</div>
+                      </div>
+                      <span className="font-bold">₹{advanceAmount.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <div className="font-medium">Remaining</div>
+                        <div className="text-xs text-muted-foreground">After delivery confirmation</div>
+                      </div>
+                      <span className="font-medium">₹{remainingAmount.toLocaleString()}</span>
+                    </div>
+                    <Separator />
+                    <div className="flex justify-between items-center text-base">
+                      <span className="font-semibold">Total You Pay</span>
+                      <span className="font-bold text-primary">₹{merchantFinalPrice.toLocaleString()}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Escrow Info */}
+                <Card className="bg-secondary/30">
+                  <CardContent className="pt-4">
+                    <div className="flex items-start gap-3">
+                      <ShieldCheck className="w-5 h-5 text-green-500 mt-0.5" />
+                      <div className="text-sm">
+                        <div className="font-medium">Escrow Protected</div>
+                        <div className="text-muted-foreground text-xs mt-1">
+                          Your advance is held securely and only released after delivery is confirmed with OTP verification.
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </DashboardLayout>
   );

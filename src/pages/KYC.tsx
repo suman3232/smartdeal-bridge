@@ -36,6 +36,7 @@ type KYCData = {
   ifsc_code: string;
   document_url: string;
   selfie_url: string | null;
+  delivery_addresses: string[];
   status: "pending" | "approved" | "rejected";
   admin_notes: string | null;
   created_at: string;
@@ -61,8 +62,10 @@ export default function KYC() {
     account_holder_name: "",
     ifsc_code: "",
     document_url: "",
-    selfie_url: ""
+    selfie_url: "",
+    delivery_addresses: [] as string[]
   });
+  const [newAddress, setNewAddress] = useState("");
 
   useEffect(() => {
     if (profile) {
@@ -81,6 +84,7 @@ export default function KYC() {
 
     if (data) {
       setKyc(data as KYCData);
+      const addresses = Array.isArray((data as any).delivery_addresses) ? (data as any).delivery_addresses : [];
       setForm({
         pan_number: data.pan_number || "",
         full_name: data.full_name || "",
@@ -90,7 +94,8 @@ export default function KYC() {
         account_holder_name: data.account_holder_name || "",
         ifsc_code: data.ifsc_code || "",
         document_url: data.document_url || "",
-        selfie_url: data.selfie_url || ""
+        selfie_url: data.selfie_url || "",
+        delivery_addresses: addresses as string[]
       });
     }
     setLoading(false);
@@ -184,6 +189,7 @@ export default function KYC() {
       ifsc_code: form.ifsc_code,
       document_url: form.document_url,
       selfie_url: form.selfie_url || null,
+      delivery_addresses: form.delivery_addresses,
       status: "pending" as const
     };
 

@@ -14,9 +14,10 @@ import { ArrowLeft, Link as LinkIcon, CreditCard, IndianRupee, Loader2, Info, Us
 import { Link } from "react-router-dom";
 import { Separator } from "@/components/ui/separator";
 
-// Configurable percentages (these could come from admin settings in future)
-const COMMISSION_PERCENTAGE = 70; // Customer gets 70% of extra amount
-const ADVANCE_PERCENTAGE = 25; // Merchant pays 25% of final price as advance
+// Configurable percentages (per new lifecycle spec)
+const CUSTOMER_COMMISSION_PERCENTAGE = 40; // Customer gets 40% of extra amount
+const PLATFORM_FEE_PERCENTAGE = 60; // Platform gets 60% of extra amount
+const ADVANCE_PERCENTAGE = 30; // Merchant pays 30% of final price as advance
 
 export default function CreateDeal() {
   const { profile } = useAuth();
@@ -39,10 +40,10 @@ export default function CreateDeal() {
   const cardOfferPrice = parseFloat(formData.card_offer_price) || 0;
   const merchantFinalPrice = parseFloat(formData.merchant_final_price) || 0;
 
-  // Business logic calculations
+  // Business logic calculations (40% customer, 60% platform)
   const totalSavings = Math.max(0, originalPrice - cardOfferPrice);
   const extraAmount = Math.max(0, merchantFinalPrice - cardOfferPrice);
-  const customerCommission = Math.round(extraAmount * (COMMISSION_PERCENTAGE / 100));
+  const customerCommission = Math.round(extraAmount * (CUSTOMER_COMMISSION_PERCENTAGE / 100));
   const platformFee = Math.max(0, extraAmount - customerCommission);
   
   // Payment breakdown
@@ -341,7 +342,7 @@ export default function CreateDeal() {
                   <CardHeader className="pb-3">
                     <CardTitle className="text-base">How Money is Split</CardTitle>
                     <CardDescription className="text-xs">
-                      Auto-calculated ({COMMISSION_PERCENTAGE}% to customer)
+                      Auto-calculated ({CUSTOMER_COMMISSION_PERCENTAGE}% customer / {PLATFORM_FEE_PERCENTAGE}% platform)
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-3 text-sm">

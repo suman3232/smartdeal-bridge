@@ -583,12 +583,12 @@ export type Database = {
           required_card: string
           status: Database["public"]["Enums"]["deal_status"] | null
           updated_at: string | null
-        }
+        }[]
         SetofOptions: {
           from: "*"
           to: "deals"
-          isOneToOne: true
-          isSetofReturn: false
+          isOneToOne: false
+          isSetofReturn: true
         }
       }
       complete_deal_escrow: { Args: { p_deal_id: string }; Returns: undefined }

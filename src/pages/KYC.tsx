@@ -141,10 +141,10 @@ export default function KYC() {
     // Validation
     if (!form.pan_number || !form.full_name || !form.date_of_birth || 
         !form.bank_name || !form.account_number || !form.account_holder_name || 
-        !form.ifsc_code || !form.document_url) {
+        !form.ifsc_code || !form.document_url || !form.selfie_url) {
       toast({ 
         title: "Missing Fields", 
-        description: "Please fill all required fields including PAN card image", 
+        description: "Please fill all required fields including PAN card image and selfie", 
         variant: "destructive" 
       });
       return;
@@ -452,15 +452,15 @@ export default function KYC() {
                   </div>
                 </div>
 
-                {/* Selfie Section (Optional) */}
+                {/* Selfie Section (Mandatory) */}
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 text-sm font-medium border-b pb-2">
                     <Camera className="w-4 h-4 text-primary" />
-                    Selfie Photo (Optional but recommended)
+                    Selfie Photo *
                   </div>
                   
                   <div className="space-y-2">
-                    <Label>Clear Selfie</Label>
+                    <Label>Clear Selfie *</Label>
                     {form.selfie_url ? (
                       <div className="relative">
                         <img 

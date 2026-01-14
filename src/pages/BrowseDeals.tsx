@@ -30,10 +30,11 @@ export default function BrowseDeals() {
   }, []);
 
   const fetchDeals = async () => {
+    // Fetch deals that are open/approved and have no customer yet
     const { data, error } = await supabase
       .from("deals")
       .select("*")
-      .eq("status", "approved")
+      .or("status.eq.approved,status.eq.open")
       .is("customer_id", null)
       .order("created_at", { ascending: false });
 
@@ -48,7 +49,9 @@ export default function BrowseDeals() {
 
   const getStatusVariant = (status: string) => {
     switch (status) {
-      case "approved": return "approved";
+      case "approved": 
+      case "open": 
+        return "approved";
       case "accepted": return "secondary";
       default: return "secondary";
     }

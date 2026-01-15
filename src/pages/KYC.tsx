@@ -618,6 +618,89 @@ export default function KYC() {
             </CardContent>
           </Card>
         )}
+
+        {/* Manage Delivery Addresses - Visible when KYC is pending/approved for merchants */}
+        {kyc && (kyc.status === "pending" || kyc.status === "approved") && 
+         (profile?.preferred_role === "create_deals" || profile?.preferred_role === "both") && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="w-5 h-5 text-primary" />
+                Manage Delivery Addresses
+              </CardTitle>
+              <CardDescription>
+                Add or remove delivery addresses for your deals. You'll select one when creating a new deal.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {form.delivery_addresses.length > 0 && (
+                <div className="space-y-2">
+                  {form.delivery_addresses.map((addr, idx) => (
+                    <div key={idx} className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
+                      <span className="flex-1 text-sm">{addr}</span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={async () => {
+                          const updated = form.delivery_addresses.filter((_, i) => i !== idx);
+                          setForm({ ...form, delivery_addresses: updated });
+                          // Save immediately
+                          if (kyc) {
+                            await supabase
+                              .from("kycs")
+                              .update({ delivery_addresses: updated })
+                              .eq("id", kyc.id);
+                            toast({ title: "Address Removed", description: "Delivery address has been removed" });
+                          }
+                        }}
+                      >
+                        <XCircle className="w-4 h-4 text-destructive" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              {form.delivery_addresses.length === 0 && (
+                <div className="text-center py-6 text-muted-foreground">
+                  <FileText className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">No delivery addresses added yet</p>
+                </div>
+              )}
+              
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Enter full delivery address"
+                  value={newAddress}
+                  onChange={(e) => setNewAddress(e.target.value)}
+                />
+                <Button
+                  type="button"
+                  onClick={async () => {
+                    if (newAddress.trim() && kyc) {
+                      const updated = [...form.delivery_addresses, newAddress.trim()];
+                      setForm({ ...form, delivery_addresses: updated });
+                      setNewAddress("");
+                      // Save immediately
+                      const { error } = await supabase
+                        .from("kycs")
+                        .update({ delivery_addresses: updated })
+                        .eq("id", kyc.id);
+                      if (error) {
+                        toast({ title: "Error", description: error.message, variant: "destructive" });
+                      } else {
+                        toast({ title: "Address Added", description: "Delivery address has been saved" });
+                      }
+                    }
+                  }}
+                >
+                  Add
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </DashboardLayout>
   );

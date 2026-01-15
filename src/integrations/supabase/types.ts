@@ -172,6 +172,7 @@ export type Database = {
           bank_name: string
           created_at: string | null
           date_of_birth: string | null
+          delivery_addresses: Json | null
           document_url: string
           full_name: string | null
           id: string
@@ -189,6 +190,7 @@ export type Database = {
           bank_name: string
           created_at?: string | null
           date_of_birth?: string | null
+          delivery_addresses?: Json | null
           document_url: string
           full_name?: string | null
           id?: string
@@ -206,6 +208,7 @@ export type Database = {
           bank_name?: string
           created_at?: string | null
           date_of_birth?: string | null
+          delivery_addresses?: Json | null
           document_url?: string
           full_name?: string | null
           id?: string

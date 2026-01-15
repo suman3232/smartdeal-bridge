@@ -458,6 +458,67 @@ export default function KYC() {
                   </div>
                 </div>
 
+                {/* Delivery Addresses Section - Only for Merchants */}
+                {(profile?.preferred_role === "create_deals" || profile?.preferred_role === "both") && (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 text-sm font-medium border-b pb-2">
+                      <FileText className="w-4 h-4 text-primary" />
+                      Delivery Addresses (for deals)
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label>Your Delivery Addresses</Label>
+                      <p className="text-xs text-muted-foreground mb-2">
+                        Add addresses where you want products delivered. You'll select one when creating deals.
+                      </p>
+                      
+                      {form.delivery_addresses.length > 0 && (
+                        <div className="space-y-2 mb-3">
+                          {form.delivery_addresses.map((addr, idx) => (
+                            <div key={idx} className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
+                              <span className="flex-1 text-sm">{addr}</span>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  const updated = form.delivery_addresses.filter((_, i) => i !== idx);
+                                  setForm({ ...form, delivery_addresses: updated });
+                                }}
+                              >
+                                <XCircle className="w-4 h-4 text-destructive" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Enter full delivery address"
+                          value={newAddress}
+                          onChange={(e) => setNewAddress(e.target.value)}
+                        />
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          onClick={() => {
+                            if (newAddress.trim()) {
+                              setForm({ 
+                                ...form, 
+                                delivery_addresses: [...form.delivery_addresses, newAddress.trim()] 
+                              });
+                              setNewAddress("");
+                            }
+                          }}
+                        >
+                          Add
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Selfie Section (Mandatory) */}
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 text-sm font-medium border-b pb-2">
